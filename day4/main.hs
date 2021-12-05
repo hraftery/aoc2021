@@ -35,7 +35,7 @@ parseBoards ls = let (thisBoard,boardSep) = span (any isDigit) ls
 getWinner :: [Int] -> [(Board, Board)] -> (Int, Board)
 getWinner [] _ = error "Need non-empty draws to find winner"
 getWinner (d:ds) boards = let boards' = doDraw d boards
-                              winners  = filter isWinningBoard boards' in
+                              winners = filter isWinningBoard boards' in
                           if null winners then getWinner ds boards'
                           else (d, fst $ head winners)
 
