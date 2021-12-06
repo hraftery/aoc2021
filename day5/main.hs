@@ -15,7 +15,6 @@ main = do
 
 type Coord = (Int,Int)
 type Count = Int
---data Part  = Part1 | Part2 deriving (Eq)
 
 
 parseInput :: [String] -> [(Coord,Coord)]
@@ -37,7 +36,7 @@ coordsFromTo ((x1,y1),(x2,y2)) = let [xMin,xMax] = sort [x1,x2]
 
 coordsFromTo :: (Coord,Coord) -> [Coord]
 coordsFromTo (c1@(x1,y1), c2@(x2,y2)) = if c1 == c2 then [c1]
-                                         else zip (ordsFromTo x1 x2) (ordsFromTo y1 y2)
+                                        else zip (ordsFromTo x1 x2) (ordsFromTo y1 y2)
 
 ordsFromTo :: Int -> Int -> [Int]
 ordsFromTo o1 o2  = case compare o1 o2 of
@@ -45,7 +44,7 @@ ordsFromTo o1 o2  = case compare o1 o2 of
                       LT -> [o1..o2]
                       GT -> [o1,pred o1..o2]
 
-makeCoordMap :: [(Coord,Coord)] -> Map Coord Int
+makeCoordMap :: [(Coord,Coord)] -> Map Coord Count
 makeCoordMap = foldr addLine M.empty where
   addLine  l m = foldr addCoord m $ coordsFromTo l
   addCoord c m = M.insertWith (+) c 1 m
