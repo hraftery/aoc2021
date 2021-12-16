@@ -32,10 +32,10 @@ parseInput = M.fromListWith (++) . concatMap (makeCavePair . wordsBy (=='-')) wh
 allPathsFrom :: (Cave -> [Cave] -> Bool) -> Cave -> CaveSystem -> [[Cave]]
 allPathsFrom pathGuard from sys = map (from:) (go from []) where
   go :: Cave -> [Cave] -> [[Cave]]
-  go from soFar = let soFar' = from:soFar in
-                  [next : rest |  next <- sys ! from, pathGuard next soFar',
-                                  rest <- if next == "end" then [[]]
-                                          else go next soFar']
+  go from' soFar  = let soFar' = from':soFar in
+                    [next : rest |  next <- sys ! from', pathGuard next soFar',
+                                    rest <- if next == "end" then [[]]
+                                            else go next soFar']
 
 pathGuard1 :: Cave -> [Cave] -> Bool
 pathGuard1 next soFar = isBig next || next `notElem` soFar
