@@ -1,11 +1,11 @@
 module Main where
 
 import Data.List (transpose, foldl', tails)
+import Data.List.Split (splitOn)
 import Data.Set (Set, (\\))
 import qualified Data.Set as S
 import Data.Map (Map, (!))
 import qualified Data.Map as M
-import Data.List.Split (splitOn)
 
 main :: IO ()
 main = do
