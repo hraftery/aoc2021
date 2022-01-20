@@ -108,7 +108,7 @@ foo k xs = [h:t | t <- foo (k-1) xs, h <- xs]
 --    wins9 = totalGamesAndUniverses . numGamesAndUniverses $ winningRolls 9
 -- effectively playing two single player games. Then I copied the results into
 -- a spreadsheet which combines the two games by multiplying each number of
--- winning universes by the number of losing universes of the other player.
+-- winning universes by the number of non-winning universes of the other player.
 -- Converting that to Haskell sounds like more masochism that I can muster.
 --part2 :: [String] -> Int
 part2 _ = totalGamesAndUniverses . numGamesAndUniverses $ winningRolls' 4 8
