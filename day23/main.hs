@@ -1,10 +1,11 @@
 module Main where
 
+import Data.List (nub, elemIndex)
 import Data.Maybe ( isJust, fromJust, isNothing, mapMaybe, listToMaybe )
 import Debug.Trace (trace)
 import Data.Set  (Set)
 import qualified Data.Set as S
-
+import qualified Data.Graph.Inductive as G
 
 main :: IO ()
 main = do
@@ -28,9 +29,21 @@ data Situation = Situation
 
 type HallwayLoc = Int
 type RoomLoc = (Amphipod, RoomPos)
-data RoomPos = Top | Bottom deriving (Show, Eq)
-data Location = InHallway HallwayLoc  | InRoom RoomLoc deriving (Show, Eq)
+data RoomPos = Top | Bottom deriving (Show, Eq, Ord)
+data Location = InHallway HallwayLoc  | InRoom RoomLoc deriving (Show, Eq, Ord)
 type Move = (Location, Location) -- src, dst
+
+emptyHallway :: Hallway
+emptyHallway = replicate 11 Nothing
+
+emptyRoom :: Room
+emptyRoom = (Nothing, Nothing)
+
+emptySituation :: Situation
+emptySituation = Situation { hallway = emptyHallway,  roomA = emptyRoom,
+                                                      roomB = emptyRoom,
+                                                      roomC = emptyRoom,
+                                                      roomD = emptyRoom }
 
 allHallwayLocs :: [Location]
 allHallwayLocs =  [InHallway i | i<-[0..10]]
@@ -155,6 +168,25 @@ modify (InRoom (D,p)) a (Situation h ra rb rc rd) = Situation {
                                                                           else (fst rd, a),
                                                       hallway=h, roomA=ra, roomB=rb, roomC=rc }
 
+modifyList :: [Location] -> [Maybe Amphipod] -> Situation -> Situation
+modifyList ls as s = foldr (\(l,a) acc -> modify l a acc) s $ zip ls as
+
+allSituations :: [Situation]
+allSituations = [modifyList           [la1,la2,lb1,lb2,lc1,lc2,ld1,ld2]
+                            (map Just [A,  A,  B,  B,  C,  C,  D,  D]) emptySituation
+                | la1 <- allLocations,
+                  la2 <- filter (`notElem` [la1]) allLocations,
+                  la2 > la1,
+                  lb1 <- filter (`notElem` [la1, la2]) allLocations,
+                  lb2 <- filter (`notElem` [la1, la2, lb1]) allLocations,
+                  lb2 > lb1,
+                  lc1 <- filter (`notElem` [la1, la2, lb1, lb2]) allLocations,
+                  lc2 <- filter (`notElem` [la1, la2, lb1, lb2, lc1]) allLocations,
+                  lc2 > lc1,
+                  ld1 <- filter (`notElem` [la1, la2, lb1, lb2, lc1, lc2]) allLocations,
+                  ld2 <- filter (`notElem` [la1, la2, lb1, lb2, lc1, lc2, ld1]) allLocations,
+                  ld2 > ld1]
+
 allMoves :: Situation -> [Move]
 allMoves s = concatMap (\l -> zip (repeat l) (allMovesFrom s l)) $ amphipodLocations s
 
@@ -178,6 +210,15 @@ allSolutions sOrig = go sOrig [] S.empty where
       | S.member s' seen  = []
       | otherwise         = go s' (m:mHist) (S.insert s' seen)
 
+toGraph :: G.Gr Situation Int
+toGraph = let nodes = zip [1..] allSituations :: [G.LNode Situation]
+              edges = [(fst src,
+                        fromJust $ elemIndex (snd dst) (map snd nodes),
+                        score (fst dst) (fromJust $ amphipodAtLocation (snd src) (fst $ fst dst))) |
+                          src <- nodes,
+                          dst <- makeAllMoves (snd src)] :: [G.LEdge Int]
+              in G.mkGraph nodes edges
+
 score :: Move -> Amphipod -> Int
 score m a = stepCount m * case a of { A -> 1; B -> 10; C -> 100; D -> 1000} where
   stepCount (s@(InHallway h), e@(InRoom (_,p)))   = let (InHallway ee) = entrance e in
@@ -192,9 +233,11 @@ scorePath s = snd . foldl moveAndScore (s, 0) where
   moveAndScore (s', scoreAcc) m = let a = fromJust $ amphipodAtLocation s' (fst m) in
                                   (makeMove s' m, scoreAcc + score m a)
 
+
 part1 :: [String] -> String
 part1 inp = let s = parseInput inp in
-            show . minimum . map (scorePath s) $ allSolutions s
+--            show . minimum . map (scorePath s) $ allSolutions s
+            show $ G.spLength 1 10 toGraph
 
 part2 :: [String] -> Integer
 part2 = undefined
